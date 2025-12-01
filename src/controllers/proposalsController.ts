@@ -1,44 +1,29 @@
-import { Request, Response } from 'express';
-import { Proposal } from '../types/Proposal';
-
-let proposals = new Map<number, Proposal>();
-
-proposals.set(1, {
-  id: 1,
-  creator: "Artur",
-  description: "My first DAO proposal",
-  startBlock: 0,
-  createdAt: new Date().toISOString(),
-  endBlock: 0,
-  executedAt: null,
-  executed: false,
-  voteCountFor: 0,
-  voteCountAgainst: 0,
-  transactionHash: "0x1234567890abcdef",
-
-  votes: []
-});
-
-proposals.set(2, {
-  id: 2,
-  creator: "Artur",
-  description: "My second DAO proposal",
-  startBlock: 0,
-  createdAt: new Date().toISOString(),
-  endBlock: 0,
-  executedAt: null,
-  executed: false,
-  voteCountFor: 0,
-  voteCountAgainst: 0,
-  transactionHash: "0x1234567890abcdef",
-
-  votes: []
-});
+import { Request, Response } from "express";
+import { storage } from "../storage/proposalsStorage";
 
 export const getAllProposals = (req: Request, res: Response) => {
+  const list = Array.from(storage.proposals.values());
+
   res.json({
-    status: 'ok',
-    proposals: Array.from(proposals.values()),
-    count: proposals.size
+    status: "ok",
+    proposals: list,
+    count: list.length
+  });
+};
+
+export const getProposalById = (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const proposal = storage.proposals.get(id);
+
+  if (!proposal) {
+    return res.status(404).json({
+      status: "error",
+      message: `Proposal ${id} not found`
+    });
+  }
+
+  res.json({
+    status: "ok",
+    proposal
   });
 };

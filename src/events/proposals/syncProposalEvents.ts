@@ -6,25 +6,50 @@ import { applyProposalVote } from "./applyProposalVote";
 
 const iface = new ethers.Interface(proposalAbi);
 
-export async function syncProposalEvents(address: string, id: number) {
-  const startBlock = Number(process.env.START_BLOCK);
-  const current = await provider.getBlockNumber();
+const chunkSize = Number(process.env.CHUNK_SIZE) || 40000;
 
-  console.log(`📦 Syncing votes for Proposal #${id} from block ${startBlock} to ${current}`);
+async function getProposalLogsChunked(address: string, from: number, to: number) {
+  let logs: ethers.Log[] = [];
 
-  const logs = await provider.getLogs({
-    address,
-    fromBlock: startBlock,
-    toBlock: current
-  });
+  for (let start = from; start <= to; start += chunkSize) {
+    const end = Math.min(start + chunkSize - 1, to);
 
-  for (const log of logs) {
-    const parsed = iface.parseLog(log);
-    if (!parsed) continue;
+    console.log(`📦 Loading votes for proposal from ${start} → ${end}`);
 
-    applyProposalVote(parsed, log, id);
+    const partialLogs = await provider.getLogs({
+      address,
+      fromBlock: start,
+      toBlock: end,
+    });
+
+    logs = logs.concat(partialLogs);
   }
 
-  storage.lastCheckedBlocks[id] = current;
-  console.log(`📦 Loaded votes for #${id}`);
+  return logs;
+}
+
+export async function syncProposalEvents(address: string, id: number) {
+  const startBlock = Number(process.env.START_BLOCK);
+  const currentBlock = await provider.getBlockNumber();
+
+  console.log(
+    `📦 Syncing votes for Proposal #${id} from block ${startBlock} to ${currentBlock}`
+  );
+
+  const logs = await getProposalLogsChunked(address, startBlock, currentBlock);
+
+  for (const log of logs) {
+    try {
+      const parsed = iface.parseLog(log);
+      if (!parsed) continue;
+
+      applyProposalVote(parsed, log, id);
+    } catch (err) {
+      console.warn("⚠️ Error parsing proposal vote:", err);
+    }
+  }
+
+  storage.lastCheckedBlocks[id] = currentBlock;
+
+  console.log(`✅ Loaded votes for proposal #${id}`);
 }

@@ -9,8 +9,12 @@ dotenv.config();
 
 const app = express();
 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: false
+}));
+
 app.use(express.json());
-app.use(cors());
 
 app.use("/auth", authRouter);
 app.use("/proposals", proposalsRouter);

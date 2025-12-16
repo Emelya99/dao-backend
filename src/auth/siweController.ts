@@ -6,7 +6,7 @@ export async function getNonce(req: Request, res: Response) {
   const address = req.query.address as string;
   if (!address) return res.status(400).json({ error: "Address required" });
 
-  const nonce = crypto.randomUUID();
+  const nonce = crypto.randomUUID().replace(/-/g, "");
   nonceStore.set(address.toLowerCase(), nonce);
   console.log(nonceStore)
 

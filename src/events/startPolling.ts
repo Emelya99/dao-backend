@@ -18,6 +18,8 @@ export function startPolling() {
     const fromBlock = storage.lastBlockProcessed + 1;
     const toBlock = currentBlock;
 
+    console.log(`⏱️ Polling from block ${fromBlock} to ${toBlock}`);
+
     if (fromBlock > toBlock) return;
 
     const logs = await provider.getLogs({

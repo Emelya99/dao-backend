@@ -17,8 +17,10 @@ export const getAllProposals = (req: Request, res: Response) => {
 
   res.json({
     status: "ok",
-    proposals: list,
-    count: list.length
+    data: {
+      proposals: list,
+      count: list.length
+    }
   });
 };
 
@@ -38,7 +40,9 @@ export const getProposalById = (req: Request, res: Response) => {
 
   res.json({
     status: "ok",
-    proposal: proposalWithoutVotes
+    data: {
+      proposal: proposalWithoutVotes
+    }
   });
 };
 
@@ -55,14 +59,16 @@ export const getProposalResults = (req: Request, res: Response) => {
 
   res.json({
     status: "ok",
-    results: {
-      id: proposal.id,
-      voteCountFor: proposal.voteCountFor,
-      voteCountAgainst: proposal.voteCountAgainst,
-      totalVotes: proposal.voteCountFor + proposal.voteCountAgainst,
-      executed: proposal.executed,
-      deadline: proposal.deadline,
-      votes: proposal.votes
+    data: {
+      results: {
+        proposalId: proposal.id,
+        voteCountFor: proposal.voteCountFor,
+        voteCountAgainst: proposal.voteCountAgainst,
+        totalVotes: proposal.voteCountFor + proposal.voteCountAgainst,
+        executed: proposal.executed,
+        deadline: proposal.deadline,
+        votes: proposal.votes
+      }
     }
   });
 };

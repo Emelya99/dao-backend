@@ -3,6 +3,7 @@ import abi from "../abi/daoABI.json";
 import { ethers } from "ethers";
 import { applyEvent } from "./applyEvent";
 import { storage } from "../storage/proposalsStorage";
+import { retryWithBackoff } from "../utils/retry";
 
 const daoAddress = process.env.DAO_ADDRESS!;
 const iface = new ethers.Interface(abi);
@@ -17,11 +18,13 @@ async function getLogsChunked(fromBlock: number, toBlock: number) {
 
     console.log(`📦 Loading logs ${start} → ${end}`);
 
-    const part = await provider.getLogs({
-      address: daoAddress,
-      fromBlock: start,
-      toBlock: end
-    });
+    const part = await retryWithBackoff(() =>
+      provider.getLogs({
+        address: daoAddress,
+        fromBlock: start,
+        toBlock: end
+      })
+    );
 
     logs = logs.concat(part);
   }
@@ -32,7 +35,7 @@ async function getLogsChunked(fromBlock: number, toBlock: number) {
 export async function syncPastEvents() {
   console.log("📦 Syncing past DAO events...");
 
-  const currentBlock = await provider.getBlockNumber();
+  const currentBlock = await retryWithBackoff(() => provider.getBlockNumber());
   const startBlock = Number(process.env.START_BLOCK);
 
   console.log(`📦 Loading logs from block ${startBlock} to ${currentBlock}`);

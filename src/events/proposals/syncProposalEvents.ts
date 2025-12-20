@@ -3,6 +3,7 @@ import proposalAbi from "../../abi/proposalABI.json";
 import { ethers } from "ethers";
 import { storage } from "../../storage/proposalsStorage";
 import { applyProposalVote } from "./applyProposalVote";
+import { retryWithBackoff } from "../../utils/retry";
 
 const iface = new ethers.Interface(proposalAbi);
 
@@ -16,11 +17,13 @@ async function getProposalLogsChunked(address: string, from: number, to: number)
 
     console.log(`📦 Loading votes for proposal from ${start} → ${end}`);
 
-    const partialLogs = await provider.getLogs({
-      address,
-      fromBlock: start,
-      toBlock: end,
-    });
+    const partialLogs = await retryWithBackoff(() =>
+      provider.getLogs({
+        address,
+        fromBlock: start,
+        toBlock: end,
+      })
+    );
 
     logs = logs.concat(partialLogs);
   }
@@ -30,7 +33,7 @@ async function getProposalLogsChunked(address: string, from: number, to: number)
 
 export async function syncProposalEvents(address: string, id: number) {
   const startBlock = Number(process.env.START_BLOCK);
-  const currentBlock = await provider.getBlockNumber();
+  const currentBlock = await retryWithBackoff(() => provider.getBlockNumber());
 
   console.log(
     `📦 Syncing votes for Proposal #${id} from block ${startBlock} to ${currentBlock}`

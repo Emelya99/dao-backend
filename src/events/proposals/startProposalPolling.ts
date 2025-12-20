@@ -3,6 +3,7 @@ import proposalAbi from "../../abi/proposalABI.json";
 import { ethers } from "ethers";
 import { storage } from "../../storage/proposalsStorage";
 import { applyProposalVote } from "./applyProposalVote";
+import { retryWithBackoff } from "../../utils/retry";
 
 const iface = new ethers.Interface(proposalAbi);
 
@@ -13,15 +14,17 @@ export function startProposalPolling(address: string, id: number) {
 
   setInterval(async () => {
     const lastChecked = storage.lastCheckedBlocks[id] || Number(process.env.START_BLOCK);
-    const currentBlock = await provider.getBlockNumber();
+    const currentBlock = await retryWithBackoff(() => provider.getBlockNumber());
 
     if (lastChecked >= currentBlock) return;
 
-    const logs = await provider.getLogs({
-      address,
-      fromBlock: lastChecked + 1,
-      toBlock: currentBlock
-    });
+    const logs = await retryWithBackoff(() =>
+      provider.getLogs({
+        address,
+        fromBlock: lastChecked + 1,
+        toBlock: currentBlock
+      })
+    );
 
     for (const log of logs) {
       const parsed = iface.parseLog(log);

@@ -3,6 +3,7 @@ import abi from "../abi/daoABI.json";
 import { ethers } from "ethers";
 import { storage } from "../storage/proposalsStorage";
 import { applyEvent } from "./applyEvent";
+import { retryWithBackoff } from "../utils/retry";
 
 const daoAddress = process.env.DAO_ADDRESS!;
 const iface = new ethers.Interface(abi);
@@ -13,7 +14,7 @@ export function startPolling() {
   console.log(`⏱️ Polling every ${interval} ms...`);
 
   setInterval(async () => {
-    const currentBlock = await provider.getBlockNumber();
+    const currentBlock = await retryWithBackoff(() => provider.getBlockNumber());
 
     const fromBlock = storage.lastBlockProcessed + 1;
     const toBlock = currentBlock;
@@ -22,11 +23,13 @@ export function startPolling() {
 
     if (fromBlock > toBlock) return;
 
-    const logs = await provider.getLogs({
-      address: daoAddress,
-      fromBlock,
-      toBlock
-    });
+    const logs = await retryWithBackoff(() =>
+      provider.getLogs({
+        address: daoAddress,
+        fromBlock,
+        toBlock
+      })
+    );
 
     for (const log of logs) {
       const parsed = iface.parseLog(log);

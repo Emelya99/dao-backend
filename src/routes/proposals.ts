@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProposals, getProposalById } from "../controllers/proposalsController";
+import { getAllProposals, getProposalById, getProposalResults } from "../controllers/proposalsController";
 
 const router = Router();
 

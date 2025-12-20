@@ -34,7 +34,7 @@ export function startPolling() {
     for (const log of logs) {
       const parsed = iface.parseLog(log);
       if (!parsed) continue;
-      applyEvent(parsed, log);
+      await applyEvent(parsed, log);
     }
 
     storage.lastBlockProcessed = currentBlock;

@@ -9,8 +9,11 @@ export async function retryWithBackoff<T>(
       } catch (error: any) {
         const isLastAttempt = i === maxRetries - 1;
         const isRpcError = error.code === 'UNKNOWN_ERROR' || 
+                          error.code === 'TIMEOUT' ||
                           error.code === -32000 ||
-                          error.message?.includes('invalid block range');
+                          error.name === 'AggregateError' ||
+                          error.message?.includes('invalid block range') ||
+                          error.message?.includes('ECONNREFUSED');
         
         if (isLastAttempt || !isRpcError) {
           throw error;

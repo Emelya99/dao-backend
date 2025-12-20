@@ -2,11 +2,18 @@ import { storage } from "../storage/proposalsStorage";
 import { ethers } from "ethers";
 import { syncProposalEvents } from "./proposals/syncProposalEvents";
 import { startProposalPolling } from "./proposals/startProposalPolling";
+import proposalAbi from "../abi/proposalABI.json";
+import { provider } from "../services/provider";
+import { retryWithBackoff } from "../utils/retry";
 
-export function applyEvent(parsed: ethers.LogDescription, log: any) {
+export async function applyEvent(parsed: ethers.LogDescription, log: any) {
   switch (parsed.name) {
     case "ProposalCreated": {
       const { id, creator, description, proposalAddress } = parsed.args;
+
+      // Read deadline from ProposalContract
+      const proposalContract = new ethers.Contract(proposalAddress, proposalAbi, provider);
+      const deadline = await retryWithBackoff(() => proposalContract.deadline());
 
       storage.proposals.set(Number(id), {
         id: Number(id),
@@ -18,6 +25,7 @@ export function applyEvent(parsed: ethers.LogDescription, log: any) {
         endBlock: null,
         executedAt: null,
         executed: false,
+        deadline: Number(deadline),
         voteCountFor: 0,
         voteCountAgainst: 0,
         transactionHash: log.transactionHash,

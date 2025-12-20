@@ -46,7 +46,7 @@ export async function syncPastEvents() {
     try {
       const parsed = iface.parseLog(log);
       if (!parsed) continue;
-      applyEvent(parsed, log);
+      await applyEvent(parsed, log);
     } catch (err) {
       console.warn("⚠️ Error parsing log:", err);
     }

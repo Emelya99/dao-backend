@@ -2,6 +2,7 @@ export interface Proposal {
   id: number;
   creator: string;
   description: string;
+  deadline: number;
   proposalContract: string;
 
   startBlock: number;

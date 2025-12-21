@@ -46,7 +46,7 @@ export async function syncProposalEvents(address: string, id: number) {
       const parsed = iface.parseLog(log);
       if (!parsed) continue;
 
-      applyProposalVote(parsed, log, id);
+      await applyProposalVote(parsed, log, id);
     } catch (err) {
       console.warn("⚠️ Error parsing proposal vote:", err);
     }

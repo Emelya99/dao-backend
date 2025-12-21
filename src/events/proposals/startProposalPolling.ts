@@ -29,7 +29,7 @@ export function startProposalPolling(address: string, id: number) {
     for (const log of logs) {
       const parsed = iface.parseLog(log);
       if (!parsed) continue;
-      applyProposalVote(parsed, log, id);
+      await applyProposalVote(parsed, log, id);
     }
 
     storage.lastCheckedBlocks[id] = currentBlock;

@@ -18,8 +18,8 @@ export const getAllProposals = (req: Request, res: Response) => {
   res.json({
     status: "ok",
     data: {
-      proposals: list,
-      count: list.length
+    proposals: list,
+    count: list.length
     }
   });
 };

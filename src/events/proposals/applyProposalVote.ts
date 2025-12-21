@@ -1,7 +1,9 @@
 import { ethers } from "ethers";
 import { storage } from "../../storage/proposalsStorage";
+import { provider } from "../../services/provider";
+import { retryWithBackoff } from "../../utils/retry";
 
-export function applyProposalVote(parsed: ethers.LogDescription, log: any, id: number) {
+export async function applyProposalVote(parsed: ethers.LogDescription, log: any, id: number) {
   if (parsed.name !== "Voted") return;
 
   const { voter, support, amount } = parsed.args;
@@ -9,12 +11,21 @@ export function applyProposalVote(parsed: ethers.LogDescription, log: any, id: n
   const proposal = storage.proposals.get(id);
   if (!proposal) return;
 
+  // Get block timestamp
+  let timestamp: string;
+  try {
+    const block = await retryWithBackoff(() => provider.getBlock(log.blockNumber));
+    timestamp = block ? new Date(Number(block.timestamp) * 1000).toISOString() : new Date().toISOString();
+  } catch {
+    timestamp = new Date().toISOString();
+  }
+
   proposal.votes.push({
     voter,
     support,
     amount: Number(amount),
     blockNumber: log.blockNumber,
-    timestamp: new Date().toISOString(),
+    timestamp,
     transactionHash: log.transactionHash
   });
 

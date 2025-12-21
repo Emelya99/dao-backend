@@ -20,9 +20,9 @@ async function getLogsChunked(fromBlock: number, toBlock: number) {
 
     const part = await retryWithBackoff(() =>
       provider.getLogs({
-        address: daoAddress,
-        fromBlock: start,
-        toBlock: end
+      address: daoAddress,
+      fromBlock: start,
+      toBlock: end
       })
     );
 

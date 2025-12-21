@@ -15,13 +15,22 @@ export async function applyEvent(parsed: ethers.LogDescription, log: any) {
       const proposalContract = new ethers.Contract(proposalAddress, proposalAbi, provider);
       const deadline = await retryWithBackoff(() => proposalContract.deadline());
 
+      // Get block timestamp
+      let createdAt: string;
+      try {
+        const block = await retryWithBackoff(() => provider.getBlock(log.blockNumber));
+        createdAt = block ? new Date(Number(block.timestamp) * 1000).toISOString() : new Date().toISOString();
+      } catch {
+        createdAt = new Date().toISOString();
+      }
+
       storage.proposals.set(Number(id), {
         id: Number(id),
         creator,
         description,
         proposalContract: proposalAddress,
         startBlock: log.blockNumber,
-        createdAt: new Date().toISOString(),
+        createdAt,
         endBlock: null,
         executedAt: null,
         executed: false,
@@ -46,8 +55,18 @@ export async function applyEvent(parsed: ethers.LogDescription, log: any) {
 
       const proposal = storage.proposals.get(Number(id));
       if (proposal) {
+        // Get block timestamp for execution
+        let executedAt: string;
+        try {
+          const block = await retryWithBackoff(() => provider.getBlock(log.blockNumber));
+          executedAt = block ? new Date(Number(block.timestamp) * 1000).toISOString() : new Date().toISOString();
+        } catch {
+          executedAt = new Date().toISOString();
+        }
+        
         proposal.executed = true;
-        proposal.executedAt = new Date().toISOString();
+        proposal.executedAt = executedAt;
+        proposal.endBlock = log.blockNumber;
         console.log("⚡ ProposalExecuted:", Number(id));
       }
 

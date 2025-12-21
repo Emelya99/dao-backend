@@ -25,9 +25,9 @@ export function startPolling() {
 
     const logs = await retryWithBackoff(() =>
       provider.getLogs({
-        address: daoAddress,
-        fromBlock,
-        toBlock
+      address: daoAddress,
+      fromBlock,
+      toBlock
       })
     );
 

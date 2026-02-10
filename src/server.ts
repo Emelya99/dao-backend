@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import proposalsRouter from "./routes/proposals";
 import resultsRouter from "./routes/results";
 import { authRouter } from "./routes/authRoutes";
+import faucetRouter from "./routes/faucet";
 import { startEventListener } from "./events";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/auth", authRouter);
 app.use("/proposals", proposalsRouter);
 app.use("/results", resultsRouter);
+app.use("/faucet", faucetRouter);
 
 const PORT = process.env.PORT || 3000;
 

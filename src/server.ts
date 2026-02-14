@@ -12,6 +12,7 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
+  "http://localhost:4173",
   "http://localhost:5173",
   "https://dao-front.vercel.app"
 ].filter(Boolean) as string[];
